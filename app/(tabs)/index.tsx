@@ -7,7 +7,8 @@ import {
   FlatList,
   SafeAreaView,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  TextInput
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { ServiceManager } from '../../src/services/services';
@@ -17,7 +18,10 @@ import * as ImagePicker from 'expo-image-picker';
 
 export default function TabTwoScreen() {
   const [services, setServices] = useState<Service[]>([]);
+  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchText, setSearchText] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
 
   const loadServices = async () => {
     try {
@@ -219,6 +223,48 @@ export default function TabTwoScreen() {
     </TouchableOpacity>
   );
 
+  const filterServices = useCallback(() => {
+    let filtered = [...services];
+
+    if (searchText) {
+      filtered = filtered.filter(service => 
+        service.cliente.nombre.toLowerCase().includes(searchText.toLowerCase()) ||
+        service.titulo.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    if (dateFilter) {
+      filtered = filtered.filter(service => 
+        service.fecha_evento.includes(dateFilter)
+      );
+    }
+
+    setFilteredServices(filtered);
+  }, [services, searchText, dateFilter]);
+
+  useEffect(() => {
+    filterServices();
+  }, [filterServices, services, searchText, dateFilter]);
+
+  const renderHeader = () => (
+    <View style={styles.headerContainer}>
+      <View style={styles.filterContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar por cliente o título..."
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Filtrar por fecha (YYYY-MM-DD)"
+          value={dateFilter}
+          onChangeText={setDateFilter}
+        />
+      </View>
+    </View>
+  );
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -229,8 +275,9 @@ export default function TabTwoScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {renderHeader()}
       <FlatList
-        data={services}
+        data={filteredServices}
         renderItem={renderItem}
         keyExtractor={item => item.id.toString()}
         refreshing={isLoading}
@@ -352,5 +399,22 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: '600',
+  },
+  headerContainer: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  filterContainer: {
+    gap: 10,
+  },
+  searchInput: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#f5f5f5',
   },
 });
