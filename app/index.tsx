@@ -33,9 +33,9 @@ export default function HomeScreen() {
     if (!validateCredentials()) return;
 
     setIsLoading(true);
-    router.push('/(tabs)');
     try {
       const response = await AuthService.login(credentials);
+      router.push('/(tabs)');
       console.log('Login response:', response);
 
       if (response.status === 200) {

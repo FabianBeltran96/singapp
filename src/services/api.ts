@@ -1,11 +1,11 @@
-import type { LoginCredentials, LoginResponse, LogoutResponse } from '../types/auth';
+import type { LoginCredentials, LoginResponse, LogoutResponse, StateChangeResponse, SignatureRequest, SignatureResponse } from '../types/auth';
 import type { ServicesResponse } from '../types/service';
 
 const API_URL = 'https://multitanques.smartlytic.com.co';
 
 export const api = {
     login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
-        const response = await fetch(`${API_URL}/login`, {
+        const response = await fetch(`${API_URL}/api/login`, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -30,13 +30,43 @@ export const api = {
     },
 
     getCurrentUserServices: async (token: string): Promise<ServicesResponse> => {
-        const response = await fetch(`${API_URL}/api/servicios/get/?=1734495866092`, {
+        const response = await fetch(`${API_URL}/api/servicios/get/by/current/user`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+        });
+
+        return response.json();
+    },
+
+    setServiceInProgress: async (serviceId: number, token: string): Promise<StateChangeResponse> => {
+        const response = await fetch(`${API_URL}/api/servicios/${serviceId}/to/state/inprogress`, {
             method: 'POST',
             headers: {
-                'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer 2|oZEHzWcJMkr60vMNSKLX4vZLMPUzvLFczAFshNvf4ec5266b`
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
+        });
+
+        return response.json();
+    },
+
+    signService: async (
+        serviceId: number, 
+        signatureData: SignatureRequest, 
+        token: string
+    ): Promise<SignatureResponse> => {
+        const response = await fetch(`${API_URL}/api/servicios/${serviceId}/firma`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(signatureData),
         });
 
         return response.json();

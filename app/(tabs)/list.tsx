@@ -95,6 +95,41 @@ export default function TabTwoScreen() {
     }
   };
 
+  const handleStartService = async (serviceId: number) => {
+    try {
+      const response = await ServiceManager.setServiceInProgress(serviceId);
+      if (response.status === 200) {
+        // Recargar la lista después de cambiar el estado
+        loadServices();
+      } else {
+        Alert.alert('Error', response.error || 'Error al iniciar el servicio');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Error de conexión');
+    }
+  };
+
+  const handleSignService = async (serviceId: number) => {
+    try {
+      const signatureData = {
+        firma: "data:image/png;base64,TODO_EL_BASE64", // Esto debería venir de un componente de firma
+        observacion: null
+      };
+
+      const response = await ServiceManager.signService(serviceId, signatureData);
+      if (response.status === 200) {
+        loadServices(); // Recargar la lista después de firmar
+        Alert.alert('Éxito', 'Servicio firmado correctamente');
+      } else {
+        Alert.alert('Error', response.error || 'Error al firmar el servicio');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Error de conexión');
+    }
+  };
+
   const renderItem = ({ item }: { item: Service }) => (
     <TouchableOpacity
       style={styles.item}
@@ -114,6 +149,22 @@ export default function TabTwoScreen() {
       <View style={styles.itemDetails}>
         <Text style={styles.itemDate}>{item.fecha_hora_evento}</Text>
         <Text style={styles.itemClient}>{item.cliente.nombre}</Text>
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.startButton]}
+          onPress={() => handleStartService(item.id)}
+        >
+          <Text style={styles.buttonText}>Iniciar Servicio</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionButton, styles.signButton]}
+          onPress={() => handleSignService(item.id)}
+        >
+          <Text style={styles.buttonText}>Firmar</Text>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -145,11 +196,6 @@ export default function TabTwoScreen() {
       <TouchableOpacity
         onPress={loadServices}
       >
-        {isLoading ? (
-          <ActivityIndicator color="black" />
-        ) : (
-          <Text style={styles.buttonText}>Cargar servicios</Text>
-        )}
       </TouchableOpacity>
     </SafeAreaView>
 
@@ -234,5 +280,27 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#666',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    gap: 10,
+  },
+  actionButton: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  startButton: {
+    backgroundColor: '#4CAF50',
+  },
+  signButton: {
+    backgroundColor: '#2196F3',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: '600',
   },
 });

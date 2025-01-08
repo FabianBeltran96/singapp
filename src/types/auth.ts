@@ -17,4 +17,23 @@ export interface LogoutResponse {
   message: string;
   data: null;
   error: string | null;
+}
+
+export interface StateChangeResponse {
+  status: number;
+  message: string;
+  data: null;
+  error: string | null;
+}
+
+export interface SignatureRequest {
+  firma: string;
+  observacion: string | null;
+}
+
+export interface SignatureResponse {
+  status: number;
+  message: string;
+  data: null;
+  error: string | null;
 } 
