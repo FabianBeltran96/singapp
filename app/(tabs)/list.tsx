@@ -13,6 +13,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { ServiceManager } from '../../src/services/services';
 import { AuthService } from '../../src/services/auth';
 import type { Service } from '../../src/types/service';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function TabTwoScreen() {
   const [services, setServices] = useState<Service[]>([]);
@@ -112,21 +113,40 @@ export default function TabTwoScreen() {
 
   const handleSignService = async (serviceId: number) => {
     try {
-      const signatureData = {
-        firma: "data:image/png;base64,TODO_EL_BASE64", // Esto debería venir de un componente de firma
-        observacion: null
-      };
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Error', 'Se necesita permiso para acceder a la galería');
+        return;
+      }
 
-      const response = await ServiceManager.signService(serviceId, signatureData);
-      if (response.status === 200) {
-        loadServices(); // Recargar la lista después de firmar
-        Alert.alert('Éxito', 'Servicio firmado correctamente');
-      } else {
-        Alert.alert('Error', response.error || 'Error al firmar el servicio');
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets[0].base64) {
+        console.log('Primeros 254 caracteres del base64:', result.assets[0].base64.substring(0, 254));
+        
+        const signatureData = {
+          firma: `${result.assets[0].base64.substring(0, 254)}`,
+          observacion: null
+        };
+
+        const response = await ServiceManager.signService(serviceId, signatureData);
+        if (response.status === 200) {
+          loadServices();
+          Alert.alert('Éxito', 'Servicio firmado correctamente');
+        } else {
+          Alert.alert('Error', response.error || 'Error al firmar el servicio');
+        }
       }
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Error de conexión');
+      Alert.alert('Error', 'Error al procesar la imagen');
     }
   };
 
