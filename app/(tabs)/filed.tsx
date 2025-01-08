@@ -1,57 +1,58 @@
-import { View, Text, FlatList, SafeAreaView, StyleSheet } from 'react-native';
-
-
+import { useState, useEffect } from 'react';
+import { View, Text, FlatList, SafeAreaView, StyleSheet, Alert } from 'react-native';
+import { ServiceManager } from '../../src/services/services';
+import type { Service } from '../../src/types/service';
 
 export default function TabTwoScreen() {
-  const data = [
-    {
-      id: 1,
-      name: 'Contrato de servicios.pdf',
+  const [services, setServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-      date: '2024-01-15'
-    },
-    {
-      id: 2,
-      name: 'Acuerdo de confidencialidad.pdf',
+  useEffect(() => {
+    loadServices();
+  }, []);
 
-      date: '2024-01-16'
-    },
-    {
-      id: 3,
-      name: 'Propuesta comercial.pdf',
-
-      date: '2024-01-17'
-    },
-    {
-      id: 4,
-      name: 'Contrato laboral.pdf',
-
-      date: '2024-01-18'
-    },
-    {
-      id: 5,
-      name: 'Términos y condiciones.pdf',
-
-      date: '2024-01-19'
+  const loadServices = async () => {
+    try {
+      setIsLoading(true);
+      const response = await ServiceManager.getCurrentUserServices();
+      
+      if (response.status === 200) {
+        // Filtrar solo los servicios finalizados
+        const firmados = response.data.filter(service => service.estado === 'finalizado');
+        setServices(firmados);
+      } else {
+        Alert.alert('Error', response.error || 'Error al cargar servicios');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Error de conexión');
+    } finally {
+      setIsLoading(false);
     }
-  ];
-
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
-        data={data}
+        data={services}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.list}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListFooterComponent={() => <View />}
-        ListHeaderComponent={() => <View />}
-        ListEmptyComponent={() => <View />}
-        renderItem={({ item }) =>
-        (
+        ListEmptyComponent={() => (
+          <Text style={styles.emptyText}>No hay servicios finalizados</Text>
+        )}
+        renderItem={({ item }) => (
           <View style={styles.item}>
-            <Text style={styles.itemText}>{item.name}</Text>
-            <Text >{item.date}</Text>
+            <View style={styles.headerContainer}>
+              <Text style={styles.itemTitle}>{item.titulo}</Text>
+              <View style={styles.statusBadge}>
+                <Text style={styles.statusText}>{item.estado}</Text>
+              </View>
+            </View>
+            <Text style={styles.description}>
+              {item.descripcion || 'Sin descripción disponible'}
+            </Text>
+            <Text style={styles.itemDate}>{item.fecha_hora_evento}</Text>
           </View>
         )}
         keyExtractor={(item) => item.id.toString()}
@@ -63,30 +64,65 @@ export default function TabTwoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#f5f5f5',
   },
   item: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    padding: 10,
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 8,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  itemText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  itemTitle: {
+    color: '#333',
+    fontSize: 18,
+    fontWeight: '600',
+    flex: 1,
+  },
+  statusBadge: {
+    backgroundColor: '#32CD32',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    color: '#333',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  description: {
+    color: '#666',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  itemDate: {
+    color: '#888',
+    fontSize: 12,
   },
   list: {
-    width: '100%',
-    height: '100%',
-    padding: 10,
-    marginTop: 10,
-    marginBottom: 10,
+    paddingVertical: 12,
   },
   separator: {
-    height: 1,
-    backgroundColor: '#ccc',
+    height: 8,
   },
+  emptyText: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: 16,
+    marginTop: 20,
+  }
 });

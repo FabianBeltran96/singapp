@@ -206,25 +206,31 @@ export default function TabTwoScreen() {
       </View>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.startButton]}
-          onPress={() => handleStartService(item.id)}
-        >
-          <Text style={styles.buttonText}>Iniciar Servicio</Text>
-        </TouchableOpacity>
+        {item.estado === 'creado' && (
+          <TouchableOpacity
+            style={[styles.actionButton, styles.startButton]}
+            onPress={() => handleStartService(item.id)}
+          >
+            <Text style={styles.buttonText}>Iniciar Servicio</Text>
+          </TouchableOpacity>
+        )}
 
-        <TouchableOpacity
-          style={[styles.actionButton, styles.signButton]}
-          onPress={() => handleSignService(item.id)}
-        >
-          <Text style={styles.buttonText}>Firmar</Text>
-        </TouchableOpacity>
+        {item.estado === 'en_progreso' && (
+          <TouchableOpacity
+            style={[styles.actionButton, styles.signButton]}
+            onPress={() => handleSignService(item.id)}
+          >
+            <Text style={styles.buttonText}>Firmar</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </TouchableOpacity>
   );
 
   const filterServices = useCallback(() => {
-    let filtered = [...services];
+    let filtered = [...services].filter(service => 
+      service.estado !== 'finalizado'
+    );
 
     if (searchText) {
       filtered = filtered.filter(service => 
