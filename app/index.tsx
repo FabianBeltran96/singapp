@@ -41,7 +41,6 @@ export default function HomeScreen() {
       if (response.status === 200) {
         await AuthService.saveToken(response.data.token);
         const savedToken = await AuthService.getToken();
-        console.log('Token guardado:', savedToken);
       } else {
         Alert.alert('Error', response.error || 'Error al iniciar sesión');
       }

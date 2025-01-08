@@ -15,6 +15,8 @@ import { ServiceManager } from '../../src/services/services';
 import { AuthService } from '../../src/services/auth';
 import type { Service } from '../../src/types/service';
 import * as ImagePicker from 'expo-image-picker';
+import { SignatureModal } from '../../src/components/SignatureModal';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function TabTwoScreen() {
   const [services, setServices] = useState<Service[]>([]);
@@ -22,12 +24,15 @@ export default function TabTwoScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [showSignature, setShowSignature] = useState(false);
+  const [currentServiceId, setCurrentServiceId] = useState<number | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const loadServices = async () => {
     try {
       setIsLoading(true);
       const response = await ServiceManager.getCurrentUserServices();
-      console.log('Services response:', response);
 
       if (response.status === 200) {
         setServices(response.data);
@@ -45,15 +50,12 @@ export default function TabTwoScreen() {
 
   useEffect(() => {
     let mounted = true;
-    console.log('Loading services');
     const fetchServices = async () => {
-      console.log('Fetching services 2');
       try {
         const response = await ServiceManager.getCurrentUserServices();
         if (mounted && response.status === 200) {
           setServices(response.data);
         }
-        console.log('Fetching services 3');
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -62,7 +64,6 @@ export default function TabTwoScreen() {
         }
       }
     };
-    console.log('Fetching services');
     fetchServices();
 
     return () => {
@@ -132,7 +133,7 @@ export default function TabTwoScreen() {
     );
   };
 
-  const handleSignService = async (serviceId: number) => {
+  const handleSignService = (serviceId: number) => {
     Alert.alert(
       'Confirmar firma',
       '¿Deseas proceder a firmar este servicio?',
@@ -143,45 +144,38 @@ export default function TabTwoScreen() {
         },
         {
           text: 'Firmar',
-          onPress: async () => {
-            try {
-              const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-              
-              if (status !== 'granted') {
-                Alert.alert('Error', 'Se necesita permiso para acceder a la galería');
-                return;
-              }
-
-              const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [4, 3],
-                quality: 1,
-                base64: true,
-              });
-
-              if (!result.canceled && result.assets[0].base64) {
-                const signatureData = {
-                  firma: `data:image/png;base64,${result.assets[0].base64}`,
-                  observacion: null
-                };
-
-                const response = await ServiceManager.signService(serviceId, signatureData);
-                if (response.status === 200) {
-                  loadServices();
-                  Alert.alert('Éxito', 'Servicio firmado correctamente');
-                } else {
-                  Alert.alert('Error', response.error || 'Error al firmar el servicio');
-                }
-              }
-            } catch (error) {
-              console.error(error);
-              Alert.alert('Error', 'Error al procesar la imagen');
-            }
+          onPress: () => {
+            setCurrentServiceId(serviceId);
+            setShowSignature(true);
           }
         }
       ]
     );
+  };
+
+  const handleSaveSignature = async (signature: string) => {
+    try {
+      if (!currentServiceId) return;
+
+      const signatureData = {
+        firma: signature,
+        observacion: null
+      };
+
+      const response = await ServiceManager.signService(currentServiceId, signatureData);
+      if (response.status === 200) {
+        loadServices();
+        Alert.alert('Éxito', 'Servicio firmado correctamente');
+      } else {
+        Alert.alert('Error', response.error || 'Error al firmar el servicio');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Error al procesar la firma');
+    } finally {
+      setShowSignature(false);
+      setCurrentServiceId(null);
+    }
   };
 
   const renderItem = ({ item }: { item: Service }) => (
@@ -228,19 +222,19 @@ export default function TabTwoScreen() {
   );
 
   const filterServices = useCallback(() => {
-    let filtered = [...services].filter(service => 
+    let filtered = [...services].filter(service =>
       service.estado !== 'finalizado'
     );
 
     if (searchText) {
-      filtered = filtered.filter(service => 
+      filtered = filtered.filter(service =>
         service.cliente.nombre.toLowerCase().includes(searchText.toLowerCase()) ||
         service.titulo.toLowerCase().includes(searchText.toLowerCase())
       );
     }
 
     if (dateFilter) {
-      filtered = filtered.filter(service => 
+      filtered = filtered.filter(service =>
         service.fecha_evento.includes(dateFilter)
       );
     }
@@ -252,6 +246,15 @@ export default function TabTwoScreen() {
     filterServices();
   }, [filterServices, services, searchText, dateFilter]);
 
+  const onDateChange = (event: any, selected: Date | undefined) => {
+    setShowDatePicker(false);
+    if (selected) {
+      setSelectedDate(selected);
+      const formattedDate = selected.toISOString().split('T')[0];
+      setDateFilter(formattedDate);
+    }
+  };
+
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View style={styles.filterContainer}>
@@ -261,12 +264,24 @@ export default function TabTwoScreen() {
           value={searchText}
           onChangeText={setSearchText}
         />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Filtrar por fecha (YYYY-MM-DD)"
-          value={dateFilter}
-          onChangeText={setDateFilter}
-        />
+        <TouchableOpacity 
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {selectedDate 
+              ? selectedDate.toLocaleDateString()
+              : 'Seleccionar fecha'}
+          </Text>
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            value={selectedDate || new Date()}
+            mode="date"
+            display="default"
+            onChange={onDateChange}
+          />
+        )}
       </View>
     </View>
   );
@@ -300,6 +315,11 @@ export default function TabTwoScreen() {
         onPress={loadServices}
       >
       </TouchableOpacity>
+      <SignatureModal
+        visible={showSignature}
+        onClose={() => setShowSignature(false)}
+        onSave={handleSaveSignature}
+      />
     </SafeAreaView>
 
   );
@@ -422,5 +442,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     backgroundColor: '#f5f5f5',
+  },
+  dateButton: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+  },
+  dateButtonText: {
+    color: '#666',
+    fontSize: 14,
   },
 });
