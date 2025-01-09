@@ -7,7 +7,8 @@ import {
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Image
 } from 'react-native';
 import { router } from 'expo-router';
 import { InputField } from '../src/components/InputField';
@@ -35,12 +36,10 @@ export default function HomeScreen() {
     setIsLoading(true);
     try {
       const response = await AuthService.login(credentials);
-      router.push('/(tabs)');
-      console.log('Login response:', response);
 
       if (response.status === 200) {
         await AuthService.saveToken(response.data.token);
-        const savedToken = await AuthService.getToken();
+        router.replace('/(tabs)');
       } else {
         Alert.alert('Error', response.error || 'Error al iniciar sesión');
       }
@@ -58,8 +57,11 @@ export default function HomeScreen() {
       style={styles.container}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>Welcome Back</Text>
-
+      <Image
+          source={require('../assets/images/Multitanques.jpg')}
+          style={styles.logo}
+        resizeMode="contain"
+      />
         <View style={styles.inputContainer}>
           <InputField
             label="Identificación"
@@ -137,6 +139,11 @@ const styles = StyleSheet.create({
     color: 'black',
     textAlign: 'center',
     fontSize: 14,
+  },
+  logo: {
+    height: 50,
+    width: '100%',
+    marginBottom: 16,
   },
 });
 

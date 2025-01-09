@@ -18,7 +18,7 @@ export const api = {
     },
 
     logout: async (token: string): Promise<LogoutResponse> => {
-        const response = await fetch(`${API_URL}/logout`, {
+        const response = await fetch(`${API_URL}/api/logout`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',

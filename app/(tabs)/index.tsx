@@ -10,11 +10,9 @@ import {
   ActivityIndicator,
   TextInput
 } from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
+import { router } from 'expo-router';
 import { ServiceManager } from '../../src/services/services';
-import { AuthService } from '../../src/services/auth';
 import type { Service } from '../../src/types/service';
-import * as ImagePicker from 'expo-image-picker';
 import { SignatureModal } from '../../src/components/SignatureModal';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -70,23 +68,6 @@ export default function TabTwoScreen() {
       mounted = false;
     };
   }, []);
-
-  const handleItemPress = (service: Service) => {
-    router.push({
-      pathname: '/(tabs)/filed',
-      params: {
-        id: service.id,
-        title: service.titulo,
-        description: service.descripcion,
-        status: service.estado,
-        date: service.fecha_hora_evento,
-        client: service.cliente.nombre,
-        worker: service.trabajador.nombre_apellido,
-        address: service.direccion,
-        price: service.precio
-      }
-    });
-  };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -181,7 +162,6 @@ export default function TabTwoScreen() {
   const renderItem = ({ item }: { item: Service }) => (
     <TouchableOpacity
       style={styles.item}
-      onPress={() => handleItemPress(item)}
     >
       <View style={styles.itemHeader}>
         <Text style={styles.itemTitle}>{item.titulo}</Text>
@@ -264,16 +244,29 @@ export default function TabTwoScreen() {
           value={searchText}
           onChangeText={setSearchText}
         />
-        <TouchableOpacity 
-          style={styles.dateButton}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text style={styles.dateButtonText}>
-            {selectedDate 
-              ? selectedDate.toLocaleDateString()
-              : 'Seleccionar fecha'}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.dateFilterContainer}>
+          <TouchableOpacity 
+            style={styles.dateButton}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={styles.dateButtonText}>
+              {selectedDate 
+                ? selectedDate.toLocaleDateString()
+                : 'Seleccionar fecha'}
+            </Text>
+          </TouchableOpacity>
+          {selectedDate && (
+            <TouchableOpacity 
+              style={styles.clearDateButton}
+              onPress={() => {
+                setSelectedDate(null);
+                setDateFilter('');
+              }}
+            >
+              <Text style={styles.clearDateText}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         {showDatePicker && (
           <DateTimePicker
             value={selectedDate || new Date()}
@@ -444,6 +437,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   dateButton: {
+    flex: 1,
     height: 40,
     borderWidth: 1,
     borderColor: '#e0e0e0',
@@ -455,5 +449,22 @@ const styles = StyleSheet.create({
   dateButtonText: {
     color: '#666',
     fontSize: 14,
+  },
+  dateFilterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  clearDateButton: {
+    marginLeft: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearDateText: {
+    fontSize: 16,
+    color: '#666',
   },
 });
