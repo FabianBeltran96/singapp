@@ -20,7 +20,7 @@ export function LogoutButton() {
             try {
               const response = await AuthService.logout();
               if (response.status === 200) {
-                router.replace('/');
+                router.replace('/home');
               } else {
                 Alert.alert('Error', response.error || 'Error al cerrar sesión');
               }
