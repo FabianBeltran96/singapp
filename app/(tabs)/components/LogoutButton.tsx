@@ -1,9 +1,15 @@
 import { TouchableOpacity, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { RootStackParamList } from '../../../src/types/navigation';
 import { AuthService } from '../../../src/services/auth';
 
+type NavigationProp = StackNavigationProp<RootStackParamList>;
+
 export function LogoutButton() {
+  const navigation = useNavigation<NavigationProp>();
+  
   const handleLogout = async () => {
     Alert.alert(
       'Cerrar Sesión',
@@ -20,7 +26,7 @@ export function LogoutButton() {
             try {
               const response = await AuthService.logout();
               if (response.status === 200) {
-                router.replace('/home');
+                navigation.replace('home');
               } else {
                 Alert.alert('Error', response.error || 'Error al cerrar sesión');
               }

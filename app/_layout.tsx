@@ -1,10 +1,8 @@
-import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import 'react-native-reanimated';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,28 +22,13 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: false,
-            animation: 'fade',
-            presentation: 'transparentModal'
-          }}
-        />
-        <Stack.Screen name="+not-found" />
-        <Stack.Screen
-          name="home"
-          options={{
-            headerShown: false,
-            animation: 'fade',
-            presentation: 'transparentModal'
-          }}
-        />
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="home" />
+        <Stack.Screen name="(tabs)" />
       </Stack>
       <StatusBar style="auto" />
-    </ThemeProvider>
+    </>
   );
 }
