@@ -2,8 +2,8 @@ import { TouchableOpacity, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import type { RootStackParamList } from '../../../src/types/navigation';
-import { AuthService } from '../../../src/services/auth';
+import type { RootStackParamList } from '../src/types/navigation';
+import { AuthService } from '../src/services/auth';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 

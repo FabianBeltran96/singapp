@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import Entypo from '@expo/vector-icons/Entypo';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { LogoutButton } from './components/LogoutButton';
+import { LogoutButton } from '../../components/LogoutButton';
 
 export default function TabLayout() {
   return (
