@@ -90,9 +90,9 @@ export default function HomeScreen() {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity disabled={isLoading}>
+        {/* <TouchableOpacity disabled={isLoading}>
           <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </KeyboardAvoidingView>
   );
